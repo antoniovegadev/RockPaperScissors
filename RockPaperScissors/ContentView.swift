@@ -17,22 +17,24 @@ struct ContentView: View {
     let moves = ["✊","✋","✌️"]
     let moveToWin = [2, 0, 1]
     let moveToLose = [1, 2, 0]
+    
+    @State private var animationAmount = 0.0
+    @State private var scaleAmount: CGFloat = 1
 
     var body: some View {
         ZStack {
             Color.blue.edgesIgnoringSafeArea(.all)
             
             VStack {
-                VStack {
-                    Text("Score: \(score)")
-                        .font(.title2)
-                    Text("Round \(round)")
-                }.padding()
+                GameInfo(score: score, round: round)
+                    .padding()
                 
-                Text(moves[appMove])
-                    .font(.largeTitle)
-                Text(shouldWin ? "Win" : "Lose")
-                    .font(.title)
+                ExpectedView(move: moves[appMove], shouldWin: shouldWin)
+                    .rotation3DEffect(.degrees(animationAmount),axis: (x: 0.0, y: 1.0, z: 0.0))
+                    .frame(width: 125, height: 100)
+                    .foregroundColor(.white)
+                    .background(shouldWin ? Color.green : Color.red)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 
                 Spacer()
                 
@@ -46,6 +48,7 @@ struct ContentView: View {
                         }
                     }
                 }
+                .offset(y: -80)
                 
                 Spacer()
             }
@@ -60,9 +63,9 @@ struct ContentView: View {
     
     func shoot(move: Int) {
         if shouldWin {
-            score += moveToWin[appMove] == move ? 1 : -1;
+            score += moveToWin[appMove] == move ? 1 : 0;
         } else {
-            score += moveToLose[appMove] == move ? 1 : -1;
+            score += moveToLose[appMove] == move ? 1 : 0;
         }
         
         if round+1 > 10 {
@@ -75,7 +78,10 @@ struct ContentView: View {
     func newRound() {
         round += 1
         appMove = Int.random(in: 0...2)
-        shouldWin = Bool.random()
+        withAnimation {
+            animationAmount += 360
+            shouldWin = Bool.random()
+        }
     }
     
     func newGame() {
@@ -84,6 +90,38 @@ struct ContentView: View {
         round = 1
     }
     
+}
+
+struct GameInfo: View {
+    let score: Int
+    let round: Int
+    
+    var body: some View {
+        VStack(spacing: 5) {
+            Text("Score: \(score)")
+                .font(.title2)
+            Text("\(round) / 10")
+                .font(.title2)
+        }
+        .frame(width: 150, height: 75)
+        .background(Color.yellow)
+        .clipShape(Capsule())
+        .overlay(Capsule().stroke(Color.yellow, lineWidth: 10))
+    }
+}
+
+struct ExpectedView: View {
+    let move: String
+    let shouldWin: Bool
+    
+    var body: some View {
+        VStack {
+            Text(move)
+                .font(.largeTitle)
+            Text(shouldWin ? "Win" : "Lose")
+                .font(.title)
+        }
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {
